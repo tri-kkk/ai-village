@@ -122,14 +122,30 @@ async function poll(){
       if(Array.isArray(events)){
         console.log('✅ events count:', events.length);
         const RENDER_INTERVAL = 20;  // 20ms씩 차이
-        const MAX_DELAY = 15000;     // 최대 15초 (더 길게!)
+        const MAX_DELAY = 15000;     // 최대 15초
+        const gameRoles = {};  // tick별 roles 저장
+        // 먼저 모든 역할 정보 파싱
+        for(let i = 0; i < events.length; i++){
+          if(events[i].roles) {
+            try {
+              gameRoles[events[i].tick] = JSON.parse(events[i].roles);
+            } catch(e) {}
+          }
+        }
         for(let i = 0; i < events.length; i++){
           const ev = events[i];
           const delay = Math.min(i * RENDER_INTERVAL, MAX_DELAY);
           setTimeout(() => {
             addDiv(ev.tick);
             if(ev.event) { const cls=ev.phase==='밤'?'night':(ev.phase==='낮'||ev.phase==='투표')?'day':''; addSys(ev.event,cls); }
-            if(ev.line){ try{ const line=JSON.parse(ev.line); addMsg(line); }catch(e){ console.error('line parse err:', e); } }
+            if(ev.line){ try{
+              const line=JSON.parse(ev.line);
+              // ✅ tick별 역할 정보 추가 (과거 메시지의 정확한 역할 표시)
+              const tickRoles = gameRoles[ev.tick] || [];
+              const roleInfo = tickRoles.find(r => r.name === line.name);
+              if(roleInfo) line.role = roleInfo.role;
+              addMsg(line);
+            }catch(e){ console.error('line parse err:', e); } }
             if(ev.drama){ try{ addDrama(JSON.parse(ev.drama)); }catch(e){ console.error('drama parse err:', e); } }
           }, delay);
         }
