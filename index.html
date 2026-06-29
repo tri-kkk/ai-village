@@ -103,10 +103,10 @@ async function poll(){
     const w=world[0];
     if(currentGameNo && currentGameNo!==w.game_no) {
       console.log("🎮 Game changed:", currentGameNo, "→", w.game_no);
-      lastTick=-1;
+      lastTick = w.tick - 1;  // ✅ 현재 tick-1부터만 로드 (과거 이벤트 무시)
       chat.innerHTML='';
       currentGameNo=w.game_no;
-      return;  // 다음 poll에서 처음부터 다시 로드
+      return;  // 다음 poll에서 현재 이벤트부터 천천히 로드
     }
     currentGameNo=w.game_no; let roles=null; try{roles=w.roles?JSON.parse(w.roles):null;}catch(e){}
     const aliveN=(roles||[]).filter(p=>p.alive).length;
