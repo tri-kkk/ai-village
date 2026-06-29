@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI 마을</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#14181f;color:#e6e9ef;font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .wrap{max-width:760px;margin:0 auto;padding:16px;}
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .bar h1{font-size:18px;font-weight:600;margin:0;}
+  .seed{font-size:12px;color:#8b93a3;}
+  .tick{margin-left:auto;font-size:13px;color:#cdd3df;background:#1f2630;padding:4px 10px;border-radius:8px;}
+  .stage{position:relative;width:100%;background:#0f1319;border-radius:12px;overflow:hidden;border:1px solid #232a35;}
+  canvas{display:block;width:100%;height:auto;image-rendering:pixelated;}
+  .banner{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(40,52,70,.92);color:#dbe6ff;font-size:12px;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+  .controls{display:flex;gap:8px;margin:10px 0;}
+  button{background:#1f2630;color:#e6e9ef;border:1px solid #2c3543;padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;}
+  button:hover{background:#28313d;}
+  .feed{background:#0f1319;border:1px solid #232a35;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7;min-height:120px;}
+  .feed .who{font-weight:600;}
+  .chron{background:#0f1319;border:1px solid #2c3543;border-radius:12px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;white-space:pre-wrap;display:none;}
+  .chron h2{font-size:14px;margin:8px 0 4px;color:#ffd479;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><h1>🏘 AI 마을</h1><span class="seed" id="seed"></span><span class="tick" id="tickLabel">시작</span></div>
+  <div class="stage"><canvas id="cv"></canvas><div class="banner" id="banner" style="display:none"></div></div>
+  <div class="controls"><button id="play">⏸ 일시정지</button><button id="restart">↻ 처음부터</button></div>
+  <div class="feed" id="feed"></div>
+  <div class="chron" id="chron"></div>
+</div>
+<script id="data" type="application/json">{"seed":"선거의 해. 한 달 뒤 마을 시장 선거가 있다. 흉흉한 소문이 돌고, 누구를 지지할지 마을이 둘로 갈린다.","map":{"w":16,"h":12},"locations":{"빵집":{"x":2,"y":2},"우체국":{"x":13,"y":2},"광장":{"x":8,"y":5},"병원":{"x":13,"y":7},"술집":{"x":7,"y":10},"농장":{"x":2,"y":10},"시청":{"x":13,"y":10}},"frames":[{"tick":0,"event":null,"agents":[{"name":"미나","job":"빵집 주인","x":2,"y":2,"say":"","action":"하루를 시작한다","target":null},{"name":"준호","job":"우체부","x":13,"y":2,"say":"","action":"하루를 시작한다","target":null},{"name":"옥자","job":"술집 사장","x":7,"y":10,"say":"","action":"하루를 시작한다","target":null},{"name":"동수","job":"농부","x":2,"y":10,"say":"","action":"하루를 시작한다","target":null},{"name":"서연","job":"시장","x":13,"y":10,"say":"","action":"하루를 시작한다","target":null},{"name":"가람","job":"의사","x":13,"y":7,"say":"","action":"하루를 시작한다","target":null}]},{"tick":1,"event":null,"agents":[{"name":"미나","job":"빵집 주인","x":8,"y":5,"say":"","action":"광장으로 나가 마을 소식을 듣는다","target":null},{"name":"준호","job":"우체부","x":8,"y":5,"say":"","action":"편지배달을 핑계로 광장에 간다","target":null},{"name":"옥자","job":"술집 사장","x":8,"y":5,"say":"어? 미나도 왔네. 요즘 마을이 시끄럽던데 뭐 들었어?","action":"광장으로 나가 소문을 수집한다","target":"미나"},{"name":"동수","job":"농부","x":8,"y":5,"say":"","action":"광장으로 나가 소문을 듣는다","target":null},{"name":"서연","job":"시장","x":8,"y":5,"say":"안녕하세요, 여러분. 요즘 마을이 어떠신가요? 무엇을 도와드릴 수 있을까요?","action":"광장에 나가 주민들과 인사하며 마을 분위기를 살핀다","target":null},{"name":"가람","job":"의사","x":13,"y":7,"say":"","action":"진료실 정리","target":null}]},{"tick":2,"event":null,"agents":[{"name":"미나","job":"빵집 주인","x":8,"y":5,"say":"아, 옥자! 나도 방금 들었어. 시장 후보들이 누구냐고 물어보는 사람들이 많더라. 넌 뭐 들었어? 우리 빵집도 영향이 있을 테니까 귀 쫑긋 세우고 있어.","action":"옥자의 질문에 재빠르게 답하며 소문을 주고받는다","target":"옥자"},{"name":"준호","job":"우체부","x":2,"y":2,"say":"미나님, 편지 왔습니다...","action":"편지배달","target":"미나"},{"name":"옥자","job":"술집 사장","x":13,"y":10,"say":"서연 시장님! 요즘 후보들 소식 어떻게 되가요? 마을 사람들이 많이 궁금해하던데","action":"시청으로 이동하며 서연 시장에게 말을 걸기","target":"서연"},{"name":"동수","job":"농부","x":7,"y":10,"say":"","action":"술집으로 향한다","target":null},{"name":"서연","job":"시장","x":2,"y":2,"say":"미나님, 안녕하세요. 요즘 빵집 장사는 어떠신가요? 마을 분위기가 어떤지 여쭤보고 싶었어요.","action":"방문","target":"미나"},{"name":"가람","job":"의사","x":13,"y":7,"say":"","action":"진료실 정리를 계속하며 문을 닫는다","target":null}]},{"tick":3,"event":"먹구름이 몰려오더니 마을에 비가 쏟아진다.","agents":[{"name":"미나","job":"빵집 주인","x":13,"y":10,"say":"서연님! 이런 날씨에 시청까지 다녀가셨네요. 그런데 요즘 선거 얘기들이 많던데, 정말로 좋은 후보들이 나올 거 같아요?","action":"우산을 들고 시청으로 향하며 서연 시장을 찾는다","target":"서연"},{"name":"준호","job":"우체부","x":2,"y":2,"say":"","action":"편지 정렬","target":null},{"name":"옥자","job":"술집 사장","x":13,"y":10,"say":"어라, 미나님! 서연 시장님까지! 이런 빗속에 모여 있네. 요즘 선거 얘기로 마을이 들썩이던데, 혹시 뭔가 더 알려줄 게 있어요?","action":"우산을 펴고 시청 쪽으로 걸어가며","target":"미나"},{"name":"동수","job":"농부","x":7,"y":10,"say":"옥자, 집에 없네. 빗속을 헤맸나.","action":"술집 문을 열고 들어간다","target":null},{"name":"서연","job":"시장","x":8,"y":5,"say":"비가 많이 오네요. 모두 안전하게 집으로 돌아가시길 바랍니다. 저도 주민분들 안전이 최우선입니다.","action":"우산을 펴고 광장으로 나가 주민들과 마주친다","target":"미나"},{"name":"가람","job":"의사","x":13,"y":7,"say":"","action":"진료실 문을 잠그고 창밖을 본다","target":null}]}],"chronicle":"## 이번 시즌 이야기\n한 달 뒤 시장 선거를 앞두고 마을이 술렁거린다. 미나의 빵집, 옥자의 소문 수집, 준호의 편지 배달—모두가 선거 소식의 물꼬를 틀고 있다. 현직 시장 서연은 주민 접촉으로 분위기를 재고 있고, 동수는 술집 깊숙이 몸을 숨긴다. 비 오는 T3, 광장과 시청에서 마을의 진정한 심장이 뛰기 시작한다.\n\n## 화제의 인물\n**옥자** — 마을의 정보 허브. T1부터 T3까지 미나, 서연과 연이어 접촉하며 선거 정보를 능동적으로 수집하고 배포한다. 소문의 중심에서 마을을 읽는다.\n\n## 사건 TOP3\n1. **T1 광장 집결** — 미나, 옥자, 동수, 준호, 서연이 동시다발로 광장에 나타나 선거 소식을 감지하는 모습. 마을 전체가 선거 모드로 전환되다.\n2. **T2 정보전** — 옥자가 시청으로 이동해 서연에게 질문하고, 서연이 역으로 미나를 방문하는 등 주도권 다툼이 시작되다.\n3. **T3 비 오는 광장의 만남** — 미나, 옥자, 서연이 비 속에서 우연히(?) 만나 선거를 직접 거론하며 마을의 갈라진 진심이 드러나다."}</script>
+<script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>AI 마을 · 게임</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#050608;color:#e7eaf0;font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .app{max-width:680px;margin:0 auto;height:100vh;display:flex;flex-direction:column;}
+  .top{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(#1a1724,#0f0d16);border-bottom:2px solid #1f1a2e;}
+  .top h1{font-size:18px;font-weight:900;margin:0;letter-spacing:-.5px;}
+  .live{font-size:12px;font-weight:800;color:#2ecc71;display:flex;align-items:center;gap:6px;}
+  .live .dot{width:10px;height:10px;border-radius:50%;background:#2ecc71;box-shadow:0 0 10px #2ecc71;animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .phase{margin-left:auto;font-size:13px;font-weight:900;padding:5px 14px;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.4);}
+  .roster{display:flex;gap:10px;overflow-x:auto;padding:13px 16px;background:#0c0a12;border-bottom:2px solid #1f1a2e;}
+  .roster::-webkit-scrollbar{height:4px;}
+  .roster::-webkit-scrollbar-thumb{background:#3a3650;border-radius:4px;}
+  .pc{flex:none;width:72px;text-align:center;position:relative;}
+  .pc img{width:48px;height:48px;border-radius:50%;image-rendering:pixelated;background:#1a1620;border:3px solid var(--rc);box-shadow:0 0 12px rgba(0,0,0,.6);}
+  .pc.dead img{filter:grayscale(1) brightness(.35);}
+  .pc.dead::after{content:"☠";position:absolute;top:8px;left:0;right:0;font-size:26px;text-shadow:0 2px 4px rgba(0,0,0,.8);}
+  .pc b{display:block;font-size:12px;font-weight:800;margin-top:6px;}
+  .pc .rl{display:block;font-size:10px;font-weight:800;color:#fff;background:var(--rc);border-radius:6px;padding:2px 6px;margin-top:3px;}
+  .pc.dead b,.pc.dead .rl{opacity:.35;text-decoration:line-through;}
+  #chat{flex:1;overflow-y:auto;padding:14px 16px 32px;display:flex;flex-direction:column-reverse;gap:15px;}
+  .div{display:flex;align-items:center;gap:10px;margin:8px 0;}
+  .div::before,.div::after{content:"";height:1px;background:#1a1620;flex:1;}
+  .div span{font-size:11px;color:#6a7180;font-weight:800;letter-spacing:.8px;}
+  .sys{align-self:center;text-align:center;font-size:13px;font-weight:700;padding:10px 18px;border-radius:14px;max-width:88%;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+  .sys.night{background:#0e1525;color:#a8c5ff;border:1px solid #1a2a40;}
+  .sys.day{background:#2a2410;color:#ffd966;border:1px solid #3a3820;}
+  .msg{display:flex;gap:12px;align-items:flex-start;animation:fi .4s ease forwards;}
+  .msg.right{flex-direction:row-reverse;}
+  @keyframes fi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .av{width:46px;height:46px;border-radius:50%;flex:none;image-rendering:pixelated;background:#1a1620;border:2.5px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .body{flex:1;min-width:0;}
+  .msg.right .body{text-align:right;}
+  .hd{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+  .msg.right .hd{flex-direction:row-reverse;}
+  .nm{font-size:14px;font-weight:900;letter-spacing:-.2px;}
+  .rl{font-size:11px;font-weight:800;color:#fff;background:var(--c);border-radius:8px;padding:3px 9px;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .tag{font-size:9px;color:#8a7d9a;background:#1a1520;border-radius:6px;padding:2px 6px;margin-left:4px;}
+  .bub{display:inline-block;text-align:left;max-width:88%;background:#1a1823;border-left:4px solid var(--c);border-radius:4px 14px 14px 14px;padding:11px 15px;font-size:15px;line-height:1.6;box-shadow:0 4px 14px rgba(0,0,0,.5);}
+  .msg.right .bub{border-left:none;border-right:4px solid var(--c);border-radius:14px 4px 14px 14px;background:#141a22;}
+  .bub .act{color:#a0a8b8;font-size:13px;font-weight:600;}
+  .bub .say{display:block;margin-top:5px;color:#f0f3f8;font-weight:500;}
+  .msg.secret .bub{background:#0d1421;border-style:dashed;border-width:2px;}
+  .msg.secret .av{filter:brightness(.7);}
+  .drama{align-self:center;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:900;padding:11px 20px;border-radius:24px;border:2px solid var(--dc);background:#13151e;color:var(--dc);box-shadow:0 6px 20px rgba(0,0,0,.6);animation:fi .35s ease;}
+  #chat::-webkit-scrollbar{width:8px;}#chat::-webkit-scrollbar-thumb{background:#2a2440;border-radius:6px;}#chat::-webkit-scrollbar-track{background:#0a0810;}
+</style></head><body>
+<div class="app">
+  <div class="top"><h1>🔪 AI 마피아</h1><span class="live" id="live"><span class="dot" style="background:#7a8290;box-shadow:none;animation:none"></span>연결 중…</span><span class="phase" id="phase" style="background:#1b2230;color:#cdd5e3">—</span></div>
+  <div class="roster" id="roster"></div>
+  <div id="chat"></div>
+</div>
+<script>
+const SB="https://riqvjiiwjyynvhuynisv.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpcXZqaWl3anl5bnZodXluaXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MzgyNDIsImV4cCI6MjA3NzIxNDI0Mn0.HmTAFEMd-gEpl0PGb9t_j06QUJeSflTDZa0mnQcJDoY", WORLD="main";
+const HDR={apikey:ANON, Authorization:'Bearer '+ANON};
+const ORDER=["미나","준호","옥자","동수","서연","가람"];
+const ROLE={"마피아":{e:'🔪',c:'#e2554a'},"의사":{e:'🩺',c:'#4fcf7a'},"경찰":{e:'🔍',c:'#5b8def'},"시민":{e:'👤',c:'#8a93a3'}};
+const PHASE={"밤":{e:'🌙',bg:'#0d1421',fg:'#a8c5ff'},"낮":{e:'☀️',bg:'#2a2410',fg:'#ffd966'},"투표":{e:'🗳️',bg:'#231527',fg:'#e08ad0'},"준비":{e:'🎭',bg:'#1b2230',fg:'#cdd5e3'},"종료":{e:'🏁',bg:'#1a2228',fg:'#9db4d0'}};
+const AV=n=>'assets/av/'+ORDER.indexOf(n)+'.png';
+const chat=document.getElementById('chat');
+let lastTick=-1, lastSpeaker=null, lastSide='right', currentGameNo=null;
+function esc(s){return (s||'').replace(/</g,'&lt;');}
+function addDiv(t){ const d=document.createElement('div'); d.className='div'; d.innerHTML='<span>T'+t+'</span>'; chat.insertBefore(d, chat.firstChild); }
+function addSys(t,cls){ const d=document.createElement('div'); d.className='sys'+(cls?' '+cls:''); d.textContent=t; chat.insertBefore(d, chat.firstChild); }
+function addMsg(line){
+  if(!line.name) return;
+  const r=ROLE[line.role]||{e:'',c:'#9aa3b2'};
+  if(line.name!==lastSpeaker) lastSide=(lastSide==='right'?'left':'right');
+  lastSpeaker=line.name;
+  const d=document.createElement('div'); d.className='msg'+(lastSide==='right'?' right':'')+(line.secret?' secret':'');
+  d.innerHTML='<img class="av" src="'+AV(line.name)+'" style="--c:'+r.c+'">'+
+    '<div class="body"><div class="hd"><span class="nm" style="color:'+r.c+'">'+esc(line.name)+'</span>'+
+    '<span class="rl" style="--c:'+r.c+'">'+r.e+' '+esc(line.role||'')+'</span>'+(line.secret?'<span class="tag">🌙 관전용</span>':'')+'</div>'+
+    '<div class="bub" style="--c:'+r.c+'"><span class="act">'+esc(line.action)+'</span>'+(line.say?'<span class="say">"'+esc(line.say)+'"</span>':'')+'</div></div>';
+  chat.insertBefore(d, chat.firstChild);
+}
+function addDrama(dr){
+  const kind=dr.kind, c=kind==='good'?'#2ecc71':(kind==='kill'||kind==='bad')?'#e2554a':'#f39c12';
+  const e=kind==='good'?'🎉':kind==='kill'?'🔪':kind==='bad'?'⚰️':'✨';
+  const d=document.createElement('div'); d.className='drama'; d.style.setProperty('--dc',c);
+  d.innerHTML=e+' <span>'+esc(dr.pair.join(' · '))+'</span> <small style="opacity:.8;font-weight:700">'+esc(dr.label)+'</small>';
+  chat.insertBefore(d, chat.firstChild);
+}
+function setLive(h){ document.getElementById('live').innerHTML=h; }
+function renderRoster(roles){
+  document.getElementById('roster').innerHTML=ORDER.map(function(n){
+    const p=(roles||[]).find(x=>x.name===n); if(!p) return '<div class="pc" style="--rc:#3a3a50"><img src="'+AV(n)+'"><b>'+n+'</b></div>';
+    const r=ROLE[p.role]||{e:'',c:'#888'};
+    return '<div class="pc'+(p.alive?'':' dead')+'" style="--rc:'+r.c+'"><img src="'+AV(n)+'"><b>'+n+'</b><span class="rl">'+r.e+' '+p.role+'</span></div>';
+  }).join('');
+}
+function setPhase(ph,day){
+  const m=PHASE[ph]||PHASE['준비']; const el=document.getElementById('phase');
+  el.style.background=m.bg; el.style.color=m.fg;
+  el.textContent=m.e+' '+(ph||'—')+(day?' · '+day+'일차':'');
+}
+async function poll(){
+  try{
+    const world=await fetch(SB+'/rest/v1/village_world?world=eq.'+WORLD+'&select=game_no,game_type,tick,phase,day,roles,status',{headers:HDR}).then(r=>r.json());
+    if(!Array.isArray(world) || !world[0]){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>데이터 대기'); return; }
+    const w=world[0];
+    if(currentGameNo && currentGameNo!==w.game_no) {
+      console.log("🎮 Game changed:", currentGameNo, "→", w.game_no);
+      lastTick=-1;
+      chat.innerHTML='';
+      currentGameNo=w.game_no;
+      return;  // 다음 poll에서 처음부터 다시 로드
+    }
+    currentGameNo=w.game_no; let roles=null; try{roles=w.roles?JSON.parse(w.roles):null;}catch(e){}
+    const aliveN=(roles||[]).filter(p=>p.alive).length;
+    setLive('<span class="dot"></span>LIVE · 생존 '+aliveN+'명');
+    setPhase(w.phase,w.day);
+    if(roles) renderRoster(roles);
+    if(w.tick>lastTick){
+      const near=chat.scrollHeight-chat.scrollTop-chat.clientHeight<500;
+      const url=SB+'/rest/v1/village_events?world=eq.'+WORLD+'&game_no=eq.'+w.game_no+'&tick=gt.'+lastTick+'&order=tick.asc';
+      console.log('📡 fetching events from:', url);
+      const events=await fetch(url,{headers:HDR}).then(r=>r.json());
+      console.log('📦 events response:', events);
+      if(Array.isArray(events)){
+        console.log('✅ events count:', events.length);
+        const RENDER_INTERVAL = 20;  // 20ms씩 차이
+        const MAX_DELAY = 15000;     // 최대 15초 (더 길게!)
+        for(let i = 0; i < events.length; i++){
+          const ev = events[i];
+          const delay = Math.min(i * RENDER_INTERVAL, MAX_DELAY);
+          setTimeout(() => {
+            addDiv(ev.tick);
+            if(ev.event) { const cls=ev.phase==='밤'?'night':(ev.phase==='낮'||ev.phase==='투표')?'day':''; addSys(ev.event,cls); }
+            if(ev.line){ try{ const line=JSON.parse(ev.line); addMsg(line); }catch(e){ console.error('line parse err:', e); } }
+            if(ev.drama){ try{ addDrama(JSON.parse(ev.drama)); }catch(e){ console.error('drama parse err:', e); } }
+          }, delay);
+        }
+        // lastTick을 즉시 업데이트 (setTimeout 밖에서!)
+        if(events.length > 0) lastTick = events[events.length - 1].tick;
+      } else {
+        console.error('❌ events is not array:', events);
+      }
+      // column-reverse에서는 자동 스크롤 안 함 (사용자 스크롤 위치 유지)
+    }
+  }catch(e){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>연결대기'); }
+}
+poll(); setInterval(poll, 1000);
+</script></body></html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>AI 마을 · 마피아</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#0a0c11;color:#e7eaf0;font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .app{max-width:620px;margin:0 auto;height:100vh;display:flex;flex-direction:column;}
+  .top{display:flex;align-items:center;gap:9px;padding:12px 16px;background:linear-gradient(#15131c,#100e15);border-bottom:1px solid #241f2e;}
+  .top h1{font-size:16px;font-weight:800;margin:0;letter-spacing:-.3px;}
+  .live{font-size:11px;font-weight:700;color:#3ddc84;display:flex;align-items:center;gap:5px;}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:#3ddc84;box-shadow:0 0 7px #3ddc84;animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .phase{margin-left:auto;font-size:12px;font-weight:800;padding:3px 12px;border-radius:8px;}
+  .roster{display:flex;gap:7px;overflow-x:auto;padding:10px 12px;background:#0c0e14;border-bottom:1px solid #181d27;}
+  .roster::-webkit-scrollbar{height:0;}
+  .pc{flex:none;width:64px;text-align:center;position:relative;}
+  .pc img{width:42px;height:42px;border-radius:50%;image-rendering:pixelated;background:#161b24;border:2px solid var(--rc);}
+  .pc.dead img{filter:grayscale(1) brightness(.45);}
+  .pc.dead::after{content:"☠";position:absolute;top:8px;left:0;right:0;font-size:22px;}
+  .pc b{display:block;font-size:11px;font-weight:700;margin-top:3px;}
+  .pc .rl{display:block;font-size:9.5px;font-weight:700;color:var(--rc);}
+  .pc.dead b,.pc.dead .rl{opacity:.4;text-decoration:line-through;}
+  #chat{flex:1;overflow-y:auto;padding:10px 14px 26px;display:flex;flex-direction:column;gap:12px;}
+  .div{display:flex;align-items:center;gap:9px;margin:4px 2px 0;}
+  .div::before,.div::after{content:"";height:1px;background:#1b212b;flex:1;}
+  .div span{font-size:10px;color:#5a6473;font-weight:700;letter-spacing:.5px;}
+  .sys{align-self:center;text-align:center;background:#13161d;color:#cfd6e2;font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:12px;border:1px solid #232a36;max-width:92%;}
+  .sys.night{background:#0e1322;color:#9fb3e0;border-color:#1c2740;}
+  .sys.day{background:#231d10;color:#ffd479;border-color:#3a3016;}
+  .msg{display:flex;gap:10px;align-items:flex-start;animation:fi .26s ease;}
+  .msg.right{flex-direction:row-reverse;}
+  @keyframes fi{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .av{width:40px;height:40px;border-radius:50%;flex:none;image-rendering:pixelated;background:#161b24;border:2px solid var(--c);}
+  .body{flex:1;min-width:0;}
+  .msg.right .body{text-align:right;}
+  .hd{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;}
+  .msg.right .hd{flex-direction:row-reverse;}
+  .nm{font-size:13px;font-weight:800;}
+  .rl{font-size:10px;font-weight:700;color:#fff;background:var(--c);border-radius:9px;padding:1px 7px;}
+  .bub{display:inline-block;text-align:left;max-width:92%;background:#161b23;border-left:3px solid var(--c);border-radius:3px 12px 12px 12px;padding:9px 13px;font-size:14px;line-height:1.5;}
+  .msg.right .bub{border-left:none;border-right:3px solid var(--c);border-radius:12px 3px 12px 12px;}
+  .bub .act{color:#9aa3b2;font-size:12px;}
+  .bub .say{display:block;margin-top:3px;color:#eef1f6;}
+  .msg.secret .bub{background:#0e1322;border-style:dashed;}
+  .msg.secret .av{filter:brightness(.8);}
+  .secret-tag{font-size:9.5px;color:#6f7fb0;background:#121a2e;border-radius:8px;padding:1px 6px;}
+  .drama{align-self:center;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;padding:9px 17px;border-radius:22px;border:1px solid var(--dc);background:#13171f;color:var(--dc);box-shadow:0 0 18px -6px var(--dc);animation:fi .3s ease;}
+  #chat::-webkit-scrollbar{width:7px;}#chat::-webkit-scrollbar-thumb{background:#252c38;border-radius:4px;}
+</style></head><body>
+<div class="app">
+  <div class="top"><h1>🔪 AI 마피아</h1><span class="live" id="live"><span class="dot" style="background:#7a8290;box-shadow:none;animation:none"></span>연결 중…</span><span class="phase" id="phase" style="background:#1b2230;color:#cdd5e3">—</span></div>
+  <div class="roster" id="roster"></div>
+  <div id="chat"></div>
+</div>
+<script>
+const SB="https://riqvjiiwjyynvhuynisv.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpcXZqaWl3anl5bnZodXluaXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MzgyNDIsImV4cCI6MjA3NzIxNDI0Mn0.HmTAFEMd-gEpl0PGb9t_j06QUJeSflTDZa0mnQcJDoY", WORLD="main";
+const HDR={apikey:ANON, Authorization:'Bearer '+ANON};
+const ORDER=["미나","준호","옥자","동수","서연","가람"];
+const ROLE={"마피아":{e:'🔪',c:'#e2554a'},"의사":{e:'🩺',c:'#4fcf7a'},"경찰":{e:'🔍',c:'#5b8def'},"시민":{e:'👤',c:'#8a93a3'}};
+const PHASE={"밤":{e:'🌙',bg:'#0e1322',fg:'#9fb3e0'},"낮":{e:'☀️',bg:'#2a2113',fg:'#ffd479'},"투표":{e:'🗳️',bg:'#231327',fg:'#e08ad0'},"준비":{e:'🎭',bg:'#1b2230',fg:'#cdd5e3'},"종료":{e:'🏁',bg:'#1a2330',fg:'#cdd5e3'}};
+const AV=n=>'assets/av/'+ORDER.indexOf(n)+'.png';
+const chat=document.getElementById('chat');
+let lastTick=-1, lastSpeaker=null, lastSide='right';
+function esc(s){return (s||'').replace(/</g,'&lt;');}
+function addDiv(t){ const d=document.createElement('div'); d.className='div'; d.innerHTML='<span>BEAT '+t+'</span>'; chat.appendChild(d); }
+function addSys(t,cls){ const d=document.createElement('div'); d.className='sys'+(cls?' '+cls:''); d.textContent=t; chat.appendChild(d); }
+function addMsg(a){
+  const r=ROLE[a.role]||{e:'',c:'#9aa3b2'};
+  if(a.name!==lastSpeaker) lastSide=(lastSide==='right'?'left':'right');
+  lastSpeaker=a.name;
+  const d=document.createElement('div'); d.className='msg'+(lastSide==='right'?' right':'')+(a.secret?' secret':'');
+  d.innerHTML='<img class="av" src="'+AV(a.name)+'" style="--c:'+r.c+'">'+
+    '<div class="body"><div class="hd"><span class="nm" style="color:'+r.c+'">'+esc(a.name)+'</span>'+
+    '<span class="rl" style="--c:'+r.c+'">'+r.e+' '+esc(a.role||'')+'</span>'+
+    (a.secret?'<span class="secret-tag">🌙 밤 · 관전자 전용</span>':'')+'</div>'+
+    '<div class="bub" style="--c:'+r.c+'"><span class="act">'+esc(a.action)+'</span>'+(a.say?'<span class="say">"'+esc(a.say)+'"</span>':'')+'</div></div>';
+  chat.appendChild(d);
+}
+function addDrama(dr){
+  const kind=dr.kind, c=kind==='good'?'#4fcf7a':(kind==='kill'||kind==='bad')?'#e2554a':'#e0a23c';
+  const e=kind==='good'?'🎉':kind==='kill'?'🔪':kind==='bad'?'⚰️':'🎭';
+  const d=document.createElement('div'); d.className='drama'; d.style.setProperty('--dc',c);
+  d.innerHTML=e+' <span>'+esc(dr.pair.join(' · '))+'</span> <small style="opacity:.85">'+esc(dr.label)+'</small>';
+  chat.appendChild(d);
+}
+function setLive(h){ document.getElementById('live').innerHTML=h; }
+function renderRoster(roles){
+  document.getElementById('roster').innerHTML=ORDER.map(function(n){
+    const p=(roles||[]).find(x=>x.name===n); if(!p) return '<div class="pc" style="--rc:#333"><img src="'+AV(n)+'"><b>'+n+'</b></div>';
+    const r=ROLE[p.role]||{e:'',c:'#888'};
+    return '<div class="pc'+(p.alive?'':' dead')+'" style="--rc:'+r.c+'"><img src="'+AV(n)+'"><b>'+n+'</b><span class="rl">'+r.e+p.role+'</span></div>';
+  }).join('');
+}
+function setPhase(ph,day){
+  const m=PHASE[ph]||PHASE['준비']; const el=document.getElementById('phase');
+  el.style.background=m.bg; el.style.color=m.fg;
+  el.textContent=m.e+' '+(ph||'—')+(day?' · '+day+'일차':'');
+}
+async function poll(){
+  try{
+    const world=await fetch(SB+'/rest/v1/village_world?world=eq.'+WORLD+'&select=*',{headers:HDR}).then(r=>r.json());
+    if(!Array.isArray(world)){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>데이터 대기'); return; }
+    const w=world[0]||{tick:0}; let roles=null; try{roles=w.roles?JSON.parse(w.roles):null;}catch(e){}
+    const aliveN=(roles||[]).filter(p=>p.alive).length;
+    setLive('<span class="dot"></span>LIVE · 생존 '+aliveN+'명');
+    setPhase(w.phase,w.day);
+    if(roles) renderRoster(roles);
+    if(w.tick>lastTick){
+      const near=chat.scrollHeight-chat.scrollTop-chat.clientHeight<140;
+      addDiv(w.tick);
+      let line=null; try{ line=w.line?JSON.parse(w.line):null; }catch(e){}
+      if(w.event){ const cls=w.phase==='밤'?'night':(w.phase==='낮'||w.phase==='투표')?'day':''; addSys(w.event,cls); }
+      if(line && line.name) addMsg(line);
+      if(line && line.drama) addDrama(line.drama);
+      lastTick=w.tick; if(near) chat.scrollTop=chat.scrollHeight;
+    }
+  }catch(e){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>연결대기'); }
+}
+poll(); setInterval(poll, 3000);
+</script></body></html>

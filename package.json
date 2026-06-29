@@ -1,0 +1,19 @@
+{
+  "name": "ai-village",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "AI 마을 시뮬레이션 - Phase 0 틱 루프",
+  "scripts": {
+    "start": "node mafia.mjs",
+    "dev": "node mafia.mjs --interval=8",
+    "tick": "node tick.mjs --ticks=4",
+    "tick:mock": "node tick.mjs --ticks=4 --mock",
+    "tick:live": "node tick.mjs --ticks=4 --live",
+    "tick:save": "node tick.mjs --ticks=4 --live --store=supabase"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

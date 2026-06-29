@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>AI 마을 · 라이브</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#0b0d12;color:#e7eaf0;font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .app{max-width:600px;margin:0 auto;height:100vh;display:flex;flex-direction:column;}
+  .top{display:flex;align-items:center;gap:9px;padding:13px 16px;background:linear-gradient(#141823,#11141b);border-bottom:1px solid #20262f;}
+  .top h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-.3px;}
+  .live{font-size:11px;font-weight:600;color:#3ddc84;display:flex;align-items:center;gap:5px;}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:#3ddc84;box-shadow:0 0 7px #3ddc84;animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .tk{margin-left:auto;font-size:12px;font-weight:600;color:#cdd5e3;background:#1b2230;padding:3px 10px;border-radius:8px;}
+  .seed{font-size:11px;color:#828d9e;padding:7px 16px;background:#0e1117;border-bottom:1px solid #161b22;}
+  .who{display:flex;gap:7px;overflow-x:auto;padding:9px 12px;background:#0d1016;border-bottom:1px solid #161b22;}
+  .who::-webkit-scrollbar{height:0;}
+  .wc{flex:none;display:flex;align-items:center;gap:6px;background:#141a24;border:1px solid #1f2733;border-radius:20px;padding:3px 10px 3px 3px;}
+  .wc img{width:26px;height:26px;border-radius:50%;image-rendering:pixelated;}
+  .wc b{font-size:11px;font-weight:600;}.wc small{font-size:10px;color:#7c8696;}
+  .rels{display:flex;gap:6px;overflow-x:auto;padding:7px 12px;background:#0c0f15;border-bottom:1px solid #161b22;min-height:34px;}
+  .rels::-webkit-scrollbar{height:0;}
+  .rels:empty::before{content:"아직 또렷한 관계가 없어요…";color:#4d5563;font-size:11px;align-self:center;}
+  .rc{flex:none;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:#141a24;border:1px solid var(--rc);border-radius:14px;padding:3px 9px;color:#d4dae4;}
+  #chat{flex:1;overflow-y:auto;padding:8px 14px 26px;display:flex;flex-direction:column;gap:13px;}
+  .div{display:flex;align-items:center;gap:9px;color:#56607240;margin:6px 2px 0;}
+  .div::before,.div::after{content:"";height:1px;background:#1b212b;flex:1;}
+  .div span{font-size:10px;color:#5a6473;font-weight:600;letter-spacing:.5px;}
+  .msg{display:flex;gap:10px;align-items:flex-start;animation:fi .28s ease;}
+  .msg.right{flex-direction:row-reverse;}
+  @keyframes fi{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+  .av{width:42px;height:42px;border-radius:50%;flex:none;image-rendering:pixelated;background:#161b24;}
+  .body{flex:1;min-width:0;}
+  .msg.right .body{text-align:right;}
+  .hd{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;}
+  .msg.right .hd{flex-direction:row-reverse;}
+  .nm{font-size:13px;font-weight:700;}
+  .job{font-size:10px;color:#8b94a3;background:#171d27;border:1px solid #232b37;border-radius:10px;padding:1px 7px;}
+  .pl{font-size:10px;color:#cbd3e0;background:#1a212c;border-radius:10px;padding:1px 8px;}
+  .bub{display:inline-block;text-align:left;max-width:90%;background:#161b23;border-left:3px solid var(--c);border-radius:3px 12px 12px 12px;padding:9px 13px;font-size:14px;line-height:1.5;}
+  .msg.right .bub{border-left:none;border-right:3px solid var(--c);border-radius:12px 3px 12px 12px;background:#1a2330;}
+  .bub .act{color:#9aa3b2;font-size:12.5px;}
+  .bub .say{display:block;margin-top:4px;color:#eef1f6;}
+  .rep{font-size:10.5px;color:#6f7a8a;margin-top:5px;}
+  .msg.right .rep{text-align:right;}
+  .sys{align-self:center;background:linear-gradient(#2a2113,#231d12);color:#ffd479;font-size:12px;font-weight:600;padding:7px 16px;border-radius:22px;border:1px solid #3a3016;}
+  .drama{align-self:center;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:7px 15px;border-radius:22px;border:1px solid var(--dc);background:#13171f;color:var(--dc);box-shadow:0 0 16px -6px var(--dc);animation:fi .3s ease;}
+  .drama small{font-weight:600;opacity:.85;}
+  #chat::-webkit-scrollbar{width:7px;}#chat::-webkit-scrollbar-thumb{background:#252c38;border-radius:4px;}
+</style></head><body>
+<div class="app">
+  <div class="top"><h1>🏙 AI 마을</h1><span class="live" id="live"><span class="dot" style="background:#7a8290;box-shadow:none;animation:none"></span>연결 중…</span><span class="tk" id="tk">—</span></div>
+  <div class="seed" id="seed"></div>
+  <div class="who" id="who"></div>
+  <div class="rels" id="rels"></div>
+  <div id="chat"></div>
+</div>
+<script>
+const SB="https://riqvjiiwjyynvhuynisv.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpcXZqaWl3anl5bnZodXluaXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MzgyNDIsImV4cCI6MjA3NzIxNDI0Mn0.HmTAFEMd-gEpl0PGb9t_j06QUJeSflTDZa0mnQcJDoY", WORLD="main";
+const HDR={apikey:ANON, Authorization:'Bearer '+ANON};
+const COLORS={"미나":'#e6a23c',"준호":'#5b8def',"옥자":'#e0568a',"동수":'#5fb87a',"서연":'#9b6dde',"가람":'#48c4c4'};
+const JOBS={"미나":"빵집 주인","준호":"우체부","옥자":"술집 사장","동수":"농부","서연":"시장","가람":"의사"};
+const ORDER=["미나","준호","옥자","동수","서연","가람"];
+const PE={"빵집":"🥖","우체국":"📮","광장":"⛲","병원":"🏥","술집":"🍺","농장":"🌾","시청":"🏛"};
+const AV=n=>'assets/av/'+ORDER.indexOf(n)+'.png';
+document.getElementById('seed').textContent="시즌 · 선거의 해. 한 달 뒤 마을 시장 선거가 있다. 흉흉한 소문이 돌고, 누구를 지지할지 마을이 둘로 갈린다.";
+const chat=document.getElementById('chat');
+let lastTick=-1, lastSpeaker=null, lastSide='right';
+function esc(s){return (s||'').replace(/</g,'&lt;');}
+function addDiv(t){ const d=document.createElement('div'); d.className='div'; d.innerHTML='<span>TICK '+t+'</span>'; chat.appendChild(d); }
+function addMsg(a){
+  const col=COLORS[a.name]||'#9aa3b2';
+  if(a.name!==lastSpeaker) lastSide=(lastSide==='right'?'left':'right');
+  lastSpeaker=a.name;
+  const d=document.createElement('div'); d.className='msg'+(lastSide==='right'?' right':'');
+  d.innerHTML='<img class="av" src="'+AV(a.name)+'">'+
+    '<div class="body"><div class="hd"><span class="nm" style="color:'+col+'">'+esc(a.name)+'</span>'+
+    '<span class="job">'+esc(JOBS[a.name]||'')+'</span><span class="pl">'+(PE[a.place]||'📍')+' '+esc(a.place)+'</span></div>'+
+    '<div class="bub" style="--c:'+col+'"><span class="act">'+esc(a.action)+'</span>'+(a.say?'<span class="say">"'+esc(a.say)+'"</span>':'')+
+    (a.target&&a.target!=='null'?'<div class="rep">↩ '+esc(a.target)+'에게</div>':'')+'</div></div>';
+  chat.appendChild(d);
+}
+function addSys(t){ const d=document.createElement('div'); d.className='sys'; d.textContent='📢 '+t; chat.appendChild(d); }
+const DRAMA={"동맹":{e:'🤝',c:'#4fcf7a'},"호감":{e:'💗',c:'#ef6fa6'},"갈등":{e:'⚡',c:'#e0a23c'},"파국":{e:'💔',c:'#e2554a'}};
+function addDrama(dr){
+  const m=DRAMA[dr.label]||{e:'✨',c:'#9aa3b2'};
+  const d=document.createElement('div'); d.className='drama'; d.style.setProperty('--dc',m.c);
+  d.innerHTML=m.e+' <span>'+esc(dr.pair[0])+' · '+esc(dr.pair[1])+'</span> <small>'+esc(dr.label)+'</small>';
+  chat.appendChild(d);
+}
+function relMark(s){ if(s>=8)return['🤝','#4fcf7a']; if(s>=4)return['💗','#ef6fa6']; if(s<=-8)return['💔','#e2554a']; if(s<=-4)return['⚡','#e0a23c']; return['·','#2a3340']; }
+function renderRels(arr){
+  document.getElementById('rels').innerHTML=(arr||[]).map(function(r){var m=relMark(r.s);return '<span class="rc" style="--rc:'+m[1]+'"><b style="color:'+(COLORS[r.a]||'#fff')+'">'+esc(r.a)+'</b>'+m[0]+'<b style="color:'+(COLORS[r.b]||'#fff')+'">'+esc(r.b)+'</b></span>';}).join('');
+}
+function setLive(h){ document.getElementById('live').innerHTML=h; }
+function renderWho(by){
+  document.getElementById('who').innerHTML=ORDER.map(function(n){var a=by[n];if(!a)return'';return '<div class="wc"><img src="'+AV(n)+'"><div><b style="color:'+(COLORS[n])+'">'+n+'</b><br><small>'+(PE[a.place]||'')+' '+esc(a.place)+'</small></div></div>';}).join('');
+}
+async function poll(){
+  try{
+    const live=await fetch(SB+'/rest/v1/village_live?world=eq.'+WORLD+'&select=*',{headers:HDR}).then(r=>r.json());
+    const world=await fetch(SB+'/rest/v1/village_world?world=eq.'+WORLD+'&select=*',{headers:HDR}).then(r=>r.json());
+    if(!Array.isArray(live)){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>데이터 대기'); return; }
+    const w=Array.isArray(world)&&world[0]?world[0]:{tick:0,event:null,line:null,rels:null};
+    const by={}; live.forEach(a=>by[a.name]=a);
+    setLive('<span class="dot"></span>LIVE · '+live.length+'명');
+    document.getElementById('tk').textContent='T'+w.tick;
+    renderWho(by);
+    let rels=null; try{ rels=w.rels?JSON.parse(w.rels):null; }catch(e){}
+    if(rels) renderRels(rels);
+    if(w.tick>lastTick){
+      const near=chat.scrollHeight-chat.scrollTop-chat.clientHeight<120;
+      addDiv(w.tick);
+      if(w.event) addSys(w.event);
+      let line=null; try{ line=w.line?JSON.parse(w.line):null; }catch(e){}
+      if(line && line.name){ addMsg(line); if(line.drama) addDrama(line.drama); }
+      lastTick=w.tick; if(near) chat.scrollTop=chat.scrollHeight;
+    }
+  }catch(e){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>연결대기'); }
+}
+poll(); setInterval(poll, 4000);
+</script></body></html>
