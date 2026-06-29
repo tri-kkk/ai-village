@@ -8,7 +8,13 @@ const WORLD = args.world || "main";
 const GAME_TYPE = "마피아";
 
 const env = {};
-try { for (const l of readFileSync(new URL("./.env.local", import.meta.url), "utf8").split("\n")) { const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if (m) env[m[1]] = m[2]; } } catch {}
+// Railway 환경 변수 먼저 읽기
+env.SUPABASE_URL = process.env.SUPABASE_URL;
+env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+env.MODEL = process.env.MODEL;
+// 로컬 .env.local에서 읽기 (있으면서 process.env에 없는 것들)
+try { for (const l of readFileSync(new URL("./.env.local", import.meta.url), "utf8").split("\n")) { const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if (m && !env[m[1]]) env[m[1]] = m[2]; } } catch {}
 const MODEL = env.MODEL || "claude-haiku-4-5-20251001";
 
 let sb = null;
