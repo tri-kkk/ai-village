@@ -158,5 +158,9 @@ async function poll(){
     }
   }catch(e){ setLive('<span class="dot" style="background:#e2554a;box-shadow:none;animation:none"></span>연결대기'); }
 }
-poll(); setInterval(poll, 1000);
+if(!window.pollRunning) {
+  window.pollRunning = true;
+  poll();
+  setInterval(poll, 1000);
+}
 </script></body></html>
